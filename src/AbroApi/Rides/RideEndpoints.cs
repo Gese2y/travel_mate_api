@@ -50,6 +50,39 @@ public static class RideEndpoints
             return Results.Ok(result.Select(r => RideMapper.ToDto(r, me, from)).ToList());
         });
 
+        // Upcoming rides that pick up near [lat],[lng], nearest first.
+        g.MapGet("/nearby", async (
+            double lat, double lng, ClaimsPrincipal p, AbroDbContext db, CancellationToken ct,
+            double radiusKm = 25, int seats = 1, int limit = 20) =>
+        {
+            if (lat is < -90 or > 90 || lng is < -180 or > 180)
+                return ApiError.Validation("lat", "Invalid coordinates.");
+            radiusKm = Math.Clamp(radiusKm, 1, 200);
+            limit = Math.Clamp(limit, 1, 50);
+
+            var here = RideMapper.Pt(lat, lng);
+            var now = DateTime.UtcNow;
+            var metres = radiusKm * 1000;
+
+            var rides = await Full(db)
+                .Where(r => r.Status == "active" && r.DepartureAt >= now)
+                .Where(r => r.Stops.Any(s => s.Kind != StopKind.DropOff &&
+                                             s.Location.IsWithinDistance(here, metres)))
+                .AsSplitQuery()
+                .ToListAsync(ct);
+
+            var me = Me(p);
+            var result = rides
+                .Where(r => r.SeatsFree >= seats)
+                .Select(r => (Ride: r, Km: r.Stops.Where(s => s.Kind != StopKind.DropOff)
+                    .Min(s => RideMapper.Km(s.Location, here))))
+                .OrderBy(x => x.Km).ThenBy(x => x.Ride.DepartureAt)
+                .Take(limit)
+                .Select(x => RideMapper.ToDto(x.Ride, me, here))
+                .ToList();
+            return Results.Ok(result);
+        });
+
         g.MapGet("/{id:guid}", async (Guid id, ClaimsPrincipal p, AbroDbContext db, CancellationToken ct) =>
         {
             var ride = await Full(db).AsSplitQuery().FirstOrDefaultAsync(r => r.Id == id, ct);
