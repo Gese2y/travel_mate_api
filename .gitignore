@@ -4,3 +4,7 @@ obj/
 *.user
 appsettings.Production.json
 .env
+
+# Firebase service account keys: secrets, set as env vars instead.
+*service-account*.json
+*firebase-adminsdk*.json

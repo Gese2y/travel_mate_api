@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using AbroApi.Common;
 using AbroApi.Data;
+using AbroApi.Notifications;
 using Microsoft.EntityFrameworkCore;
 
 namespace AbroApi.Rides;
@@ -12,6 +13,10 @@ public static class RideEndpoints
 
     private static Guid Me(ClaimsPrincipal p) =>
         Guid.Parse(p.FindFirstValue(ClaimTypes.NameIdentifier) ?? p.FindFirstValue("sub")!);
+
+    /// First name for notification text; accounts that skipped setup have none.
+    private static string Who(User u) =>
+        string.IsNullOrWhiteSpace(u.FirstName) ? "Someone" : u.FirstName;
 
     private static IQueryable<Ride> Full(AbroDbContext db) => db.Rides
         .Include(r => r.Driver).Include(r => r.Stops)
@@ -137,19 +142,27 @@ public static class RideEndpoints
             return Results.Created($"/api/v1/rides/{ride.Id}", RideMapper.ToDto(ride, me.Id));
         });
 
-        g.MapDelete("/{id:guid}", async (Guid id, ClaimsPrincipal p, AbroDbContext db, CancellationToken ct) =>
+        g.MapDelete("/{id:guid}", async (
+            Guid id, ClaimsPrincipal p, AbroDbContext db, INotifier notifier, CancellationToken ct) =>
         {
-            var ride = await db.Rides.FirstOrDefaultAsync(r => r.Id == id, ct);
+            var ride = await Full(db).AsSplitQuery().FirstOrDefaultAsync(r => r.Id == id, ct);
             if (ride is null) return ApiError.Result(404, "not_found", "Ride not found.");
             if (ride.DriverId != Me(p)) return ApiError.Result(403, "forbidden", "Not your ride.");
             ride.Status = "cancelled";
             await db.SaveChangesAsync(ct);
+
+            var drop = ride.Stops.OrderBy(s => s.Order).Last().Name;
+            foreach (var q in ride.Requests.Where(r =>
+                         r.Status is RequestStatus.Pending or RequestStatus.Accepted))
+                await notifier.SendAsync(q.UserId, "ride_cancelled", "Ride cancelled",
+                    $"{Who(ride.Driver)} cancelled the ride to {drop}.", "/my-trips", ct);
             return Results.NoContent();
         });
 
         // ---- seat requests ----
         g.MapPost("/{id:guid}/requests", async (
-            Guid id, SeatRequestInput req, ClaimsPrincipal p, AbroDbContext db, CancellationToken ct) =>
+            Guid id, SeatRequestInput req, ClaimsPrincipal p, AbroDbContext db,
+            INotifier notifier, CancellationToken ct) =>
         {
             var me = Me(p);
             var ride = await Full(db).AsSplitQuery().FirstOrDefaultAsync(r => r.Id == id, ct);
@@ -174,6 +187,11 @@ public static class RideEndpoints
             db.SeatRequests.Add(q);
             await db.SaveChangesAsync(ct);
             await db.Entry(q).Reference(x => x.User).LoadAsync(ct);
+
+            var drop = ride.Stops.OrderBy(s => s.Order).Last().Name;
+            await notifier.SendAsync(ride.DriverId, "seat_request", "New seat request",
+                $"{Who(q.User)} wants {q.Seats} seat{(q.Seats > 1 ? "s" : "")} to {drop}.",
+                "/my-trips", ct);
             return Results.Created($"/api/v1/rides/{id}/requests/{q.Id}", RideMapper.ToDto(q));
         });
 
@@ -189,7 +207,7 @@ public static class RideEndpoints
 
         g.MapPatch("/{rideId:guid}/requests/{id:guid}", async (
             Guid rideId, Guid id, RequestDecision body, ClaimsPrincipal p,
-            AbroDbContext db, CancellationToken ct) =>
+            AbroDbContext db, INotifier notifier, CancellationToken ct) =>
         {
             if (body.Status is not (RequestStatus.Accepted or RequestStatus.Declined))
                 return ApiError.Validation("status", "Use accepted or declined.");
@@ -206,6 +224,20 @@ public static class RideEndpoints
             q.Status = body.Status;
             await db.SaveChangesAsync(ct);
             await db.Entry(q).Reference(x => x.User).LoadAsync(ct);
+
+            if (q.Status == RequestStatus.Accepted)
+            {
+                var pickup = ride.Stops.FirstOrDefault(s => s.Order == q.PickupStopOrder)?.Name ?? "your pickup";
+                await notifier.SendAsync(q.UserId, "seat_accepted", "Seat accepted ✅",
+                    $"{Who(ride.Driver)} accepted your seat. Pickup: {pickup}.",
+                    $"/rides/{ride.Id}", ct);
+            }
+            else
+            {
+                await notifier.SendAsync(q.UserId, "seat_declined", "Request declined",
+                    $"{Who(ride.Driver)} couldn’t take you on this ride. Try another one.",
+                    "/home", ct);
+            }
             return Results.Ok(RideMapper.ToDto(q));
         });
 

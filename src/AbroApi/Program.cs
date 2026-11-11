@@ -4,6 +4,7 @@ using AbroApi.Common;
 using AbroApi.Data;
 using AbroApi.Dev;
 using AbroApi.Me;
+using AbroApi.Notifications;
 using AbroApi.Rides;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,8 @@ builder.Services.AddDbContext<AbroDbContext>(o =>
 builder.Services.Configure<JwtOptions>(config.GetSection("Jwt"));
 builder.Services.Configure<OtpOptions>(config.GetSection("Otp"));
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddSingleton<PushSender>();
+builder.Services.AddScoped<INotifier, Notifier>();
 builder.Services.AddSingleton<ISmsSender, ConsoleSmsSender>();
 
 var jwt = config.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
@@ -78,6 +81,7 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapAuth();
 app.MapMe();
 app.MapRides();
+app.MapNotifications();
 
 app.Run();
 

@@ -11,6 +11,8 @@ public class AbroDbContext(DbContextOptions<AbroDbContext> options) : DbContext(
     public DbSet<RideStop> RideStops => Set<RideStop>();
     public DbSet<RideCostItem> RideCostItems => Set<RideCostItem>();
     public DbSet<SeatRequest> SeatRequests => Set<SeatRequest>();
+    public DbSet<Device> Devices => Set<Device>();
+    public DbSet<UserNotification> Notifications => Set<UserNotification>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -40,5 +42,12 @@ public class AbroDbContext(DbContextOptions<AbroDbContext> options) : DbContext(
             e.HasIndex(s => s.Location).HasMethod("gist");
         });
         b.Entity<SeatRequest>(e => e.HasIndex(q => new { q.RideId, q.UserId }));
+
+        b.Entity<Device>(e =>
+        {
+            e.HasIndex(x => x.Token).IsUnique();
+            e.HasIndex(x => x.UserId);
+        });
+        b.Entity<UserNotification>(e => e.HasIndex(x => new { x.UserId, x.CreatedAt }));
     }
 }

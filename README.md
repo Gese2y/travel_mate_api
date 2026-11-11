@@ -30,3 +30,19 @@ cd src/AbroApi && dotnet ef migrations add <Name>
    - `Database__MigrateOnStartup` = `true`
    - Do **not** set `Otp__FixedCode` (that is dev-only). Plug in a real SMS sender first.
 4. Health check path: `/health`.
+
+## Push notifications (Firebase Cloud Messaging)
+
+Notifications are always saved to the user's inbox (`GET /api/v1/notifications`).
+To also push them to phones, set the Firebase service account key as an env var:
+
+```
+Firebase__ServiceAccountJson = <the whole contents of the downloaded JSON key>
+```
+
+Firebase console → Project settings → Service accounts → Generate new private key.
+Never commit that file. Without the variable, push is disabled and the API logs
+`Push disabled: Firebase:ServiceAccountJson is not set.`
+
+Triggers today: seat requested (→ driver), seat accepted / declined (→ rider),
+ride cancelled (→ riders with a request).
