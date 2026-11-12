@@ -251,6 +251,145 @@ namespace AbroApi.Migrations
                     b.ToTable("SeatRequests");
                 });
 
+            modelBuilder.Entity("AbroApi.Data.Trip", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("BackAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("CoverUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Destination")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("JoinPolicy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LeavesAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MeetingPoint")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("OrganiserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("PricePerPerson")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeavesAt");
+
+                    b.HasIndex("OrganiserId");
+
+                    b.ToTable("Trips");
+                });
+
+            modelBuilder.Entity("AbroApi.Data.TripCostItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Amount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TripId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TripId");
+
+                    b.ToTable("TripCostItem");
+                });
+
+            modelBuilder.Entity("AbroApi.Data.TripImage", b =>
+                {
+                    b.Property<Guid>("TripId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<byte[]>("Data")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("TripId");
+
+                    b.ToTable("TripImages");
+                });
+
+            modelBuilder.Entity("AbroApi.Data.TripRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TripId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("TripId", "UserId");
+
+                    b.ToTable("TripRequests");
+                });
+
             modelBuilder.Entity("AbroApi.Data.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -383,6 +522,52 @@ namespace AbroApi.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("AbroApi.Data.Trip", b =>
+                {
+                    b.HasOne("AbroApi.Data.User", "Organiser")
+                        .WithMany()
+                        .HasForeignKey("OrganiserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Organiser");
+                });
+
+            modelBuilder.Entity("AbroApi.Data.TripCostItem", b =>
+                {
+                    b.HasOne("AbroApi.Data.Trip", null)
+                        .WithMany("CostItems")
+                        .HasForeignKey("TripId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AbroApi.Data.TripImage", b =>
+                {
+                    b.HasOne("AbroApi.Data.Trip", null)
+                        .WithOne()
+                        .HasForeignKey("AbroApi.Data.TripImage", "TripId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AbroApi.Data.TripRequest", b =>
+                {
+                    b.HasOne("AbroApi.Data.Trip", null)
+                        .WithMany("Requests")
+                        .HasForeignKey("TripId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AbroApi.Data.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("AbroApi.Data.Ride", b =>
                 {
                     b.Navigation("CostItems");
@@ -390,6 +575,13 @@ namespace AbroApi.Migrations
                     b.Navigation("Requests");
 
                     b.Navigation("Stops");
+                });
+
+            modelBuilder.Entity("AbroApi.Data.Trip", b =>
+                {
+                    b.Navigation("CostItems");
+
+                    b.Navigation("Requests");
                 });
 #pragma warning restore 612, 618
         }

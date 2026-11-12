@@ -12,6 +12,9 @@ public class AbroDbContext(DbContextOptions<AbroDbContext> options) : DbContext(
     public DbSet<RideCostItem> RideCostItems => Set<RideCostItem>();
     public DbSet<SeatRequest> SeatRequests => Set<SeatRequest>();
     public DbSet<Device> Devices => Set<Device>();
+    public DbSet<Trip> Trips => Set<Trip>();
+    public DbSet<TripRequest> TripRequests => Set<TripRequest>();
+    public DbSet<TripImage> TripImages => Set<TripImage>();
     public DbSet<UserNotification> Notifications => Set<UserNotification>();
 
     protected override void OnModelCreating(ModelBuilder b)
@@ -49,5 +52,20 @@ public class AbroDbContext(DbContextOptions<AbroDbContext> options) : DbContext(
             e.HasIndex(x => x.UserId);
         });
         b.Entity<UserNotification>(e => e.HasIndex(x => new { x.UserId, x.CreatedAt }));
+
+        b.Entity<Trip>(e =>
+        {
+            e.HasIndex(t => t.LeavesAt);
+            e.HasOne(t => t.Organiser).WithMany().HasForeignKey(t => t.OrganiserId);
+            e.HasMany(t => t.CostItems).WithOne().HasForeignKey(c => c.TripId).OnDelete(DeleteBehavior.Cascade);
+            e.HasMany(t => t.Requests).WithOne().HasForeignKey(r => r.TripId).OnDelete(DeleteBehavior.Cascade);
+            e.Ignore(t => t.GoingCount).Ignore(t => t.SpotsLeft);
+        });
+        b.Entity<TripRequest>(e => e.HasIndex(r => new { r.TripId, r.UserId }));
+        b.Entity<TripImage>(e =>
+        {
+            e.HasKey(i => i.TripId);
+            e.HasOne<Trip>().WithOne().HasForeignKey<TripImage>(i => i.TripId).OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }
