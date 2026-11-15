@@ -7,6 +7,7 @@ using AbroApi.Me;
 using AbroApi.Notifications;
 using AbroApi.Rides;
 using AbroApi.Trips;
+using AbroApi.Verification;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -84,6 +85,7 @@ app.MapMe();
 app.MapRides();
 app.MapNotifications();
 app.MapTrips();
+app.MapVerification();
 
 app.Run();
 

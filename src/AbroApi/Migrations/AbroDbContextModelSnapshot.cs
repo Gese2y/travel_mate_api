@@ -55,6 +55,68 @@ namespace AbroApi.Migrations
                     b.ToTable("Devices");
                 });
 
+            modelBuilder.Entity("AbroApi.Data.IdVerification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<byte[]>("Back")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("BackType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("DocType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<byte[]>("Front")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("FrontType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<byte[]>("Selfie")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("SelfieType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("Status", "SubmittedAt");
+
+                    b.ToTable("IdVerifications");
+                });
+
             modelBuilder.Entity("AbroApi.Data.OtpCode", b =>
                 {
                     b.Property<Guid>("Id")
@@ -474,6 +536,17 @@ namespace AbroApi.Migrations
                     b.HasIndex("UserId", "CreatedAt");
 
                     b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("AbroApi.Data.IdVerification", b =>
+                {
+                    b.HasOne("AbroApi.Data.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("AbroApi.Data.Ride", b =>

@@ -15,6 +15,7 @@ public class AbroDbContext(DbContextOptions<AbroDbContext> options) : DbContext(
     public DbSet<Trip> Trips => Set<Trip>();
     public DbSet<TripRequest> TripRequests => Set<TripRequest>();
     public DbSet<TripImage> TripImages => Set<TripImage>();
+    public DbSet<IdVerification> IdVerifications => Set<IdVerification>();
     public DbSet<UserNotification> Notifications => Set<UserNotification>();
 
     protected override void OnModelCreating(ModelBuilder b)
@@ -66,6 +67,15 @@ public class AbroDbContext(DbContextOptions<AbroDbContext> options) : DbContext(
         {
             e.HasKey(i => i.TripId);
             e.HasOne<Trip>().WithOne().HasForeignKey<TripImage>(i => i.TripId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        b.Entity<IdVerification>(e =>
+        {
+            e.HasOne(v => v.User).WithMany().HasForeignKey(v => v.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(v => new { v.Status, v.SubmittedAt });
+            e.Property(v => v.DocType).HasMaxLength(20);
+            e.Property(v => v.Status).HasMaxLength(10);
+            e.Property(v => v.Reason).HasMaxLength(300);
         });
     }
 }
