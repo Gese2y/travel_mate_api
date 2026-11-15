@@ -14,6 +14,11 @@ public class User
     /// none | pending | approved | rejected
     public string IdStatus { get; set; } = "none";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    /// Last known position, shared by the app so we can tell people about new
+    /// rides nearby. Rounded to ~100 m before it is stored.
+    public NetTopologySuite.Geometries.Point? LastLocation { get; set; }
+    public DateTime? LocationUpdatedAt { get; set; }
 }
 
 public class OtpCode

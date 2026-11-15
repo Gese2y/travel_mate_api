@@ -22,6 +22,44 @@ public static class RideEndpoints
         .Include(r => r.Driver).Include(r => r.Stops)
         .Include(r => r.CostItems).Include(r => r.Requests);
 
+    /// Tells people who were recently within [Notifications:NearbyRideRadiusKm]
+    /// (default 30) of a pickup point that a new ride is on offer. Never throws:
+    /// the ride is already saved, so a failure here must not fail the request.
+    private static async Task NotifyNearbyAsync(
+        Ride ride, User driver, AbroDbContext db, IConfiguration cfg,
+        INotifier notifier, CancellationToken ct)
+    {
+        try
+        {
+            var metres = cfg.GetValue("Notifications:NearbyRideRadiusKm", 30.0) * 1000;
+            var recent = DateTime.UtcNow.AddDays(-7);
+            var ids = new HashSet<Guid>();
+            foreach (var stop in ride.Stops.Where(s => s.Kind != StopKind.DropOff))
+            {
+                var near = await db.Users
+                    .Where(u => u.Id != driver.Id && u.LastLocation != null &&
+                                u.LocationUpdatedAt >= recent &&
+                                u.LastLocation.IsWithinDistance(stop.Location, metres))
+                    .Select(u => u.Id).Take(200).ToListAsync(ct);
+                ids.UnionWith(near);
+            }
+            if (ids.Count == 0) return;
+
+            var ordered = ride.Stops.OrderBy(s => s.Order).ToList();
+            string Short(string name) => name.Split(',')[0].Trim();
+            var when = ride.DepartureAt.AddHours(3) // Addis is UTC+3
+                .ToString("ddd H:mm", System.Globalization.CultureInfo.InvariantCulture);
+            await notifier.SendManyAsync(ids.Take(200).ToList(), "ride_nearby", "New ride near you",
+                $"{Who(driver)} is driving {Short(ordered.First().Name)} → {Short(ordered.Last().Name)}"
+                + $" · {when} · ETB {ride.PricePerSeat:N0}/seat",
+                $"/rides/{ride.Id}", ct);
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Nearby-ride notification failed: {e.Message}");
+        }
+    }
+
     public static void MapRides(this IEndpointRouteBuilder app)
     {
         var g = app.MapGroup("/api/v1/rides").WithTags("Rides").RequireAuthorization();
@@ -98,7 +136,7 @@ public static class RideEndpoints
 
         g.MapPost("/", async (
             CreateRideRequest req, ClaimsPrincipal p, AbroDbContext db,
-            IConfiguration cfg, CancellationToken ct) =>
+            IConfiguration cfg, INotifier notifier, CancellationToken ct) =>
         {
             var me = await db.Users.FindAsync([Me(p)], ct);
             if (me is null) return ApiError.Result(401, "unauthorized", "Please sign in again.");
@@ -139,6 +177,7 @@ public static class RideEndpoints
             db.Rides.Add(ride);
             await db.SaveChangesAsync(ct);
             ride.Driver = me;
+            await NotifyNearbyAsync(ride, me, db, cfg, notifier, ct);
             return Results.Created($"/api/v1/rides/{ride.Id}", RideMapper.ToDto(ride, me.Id));
         });
 

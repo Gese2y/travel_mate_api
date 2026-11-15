@@ -52,7 +52,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Devices", (string)null);
+                    b.ToTable("Devices");
                 });
 
             modelBuilder.Entity("AbroApi.Data.IdVerification", b =>
@@ -114,7 +114,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("Status", "SubmittedAt");
 
-                    b.ToTable("IdVerifications", (string)null);
+                    b.ToTable("IdVerifications");
                 });
 
             modelBuilder.Entity("AbroApi.Data.OtpCode", b =>
@@ -147,7 +147,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("Phone", "CreatedAt");
 
-                    b.ToTable("OtpCodes", (string)null);
+                    b.ToTable("OtpCodes");
                 });
 
             modelBuilder.Entity("AbroApi.Data.RefreshToken", b =>
@@ -177,7 +177,7 @@ namespace AbroApi.Migrations
                     b.HasIndex("TokenHash")
                         .IsUnique();
 
-                    b.ToTable("RefreshTokens", (string)null);
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("AbroApi.Data.Ride", b =>
@@ -212,7 +212,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("DriverId");
 
-                    b.ToTable("Rides", (string)null);
+                    b.ToTable("Rides");
                 });
 
             modelBuilder.Entity("AbroApi.Data.RideCostItem", b =>
@@ -235,7 +235,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("RideId");
 
-                    b.ToTable("RideCostItems", (string)null);
+                    b.ToTable("RideCostItems");
                 });
 
             modelBuilder.Entity("AbroApi.Data.RideStop", b =>
@@ -273,7 +273,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("RideId");
 
-                    b.ToTable("RideStops", (string)null);
+                    b.ToTable("RideStops");
                 });
 
             modelBuilder.Entity("AbroApi.Data.SeatRequest", b =>
@@ -310,7 +310,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("RideId", "UserId");
 
-                    b.ToTable("SeatRequests", (string)null);
+                    b.ToTable("SeatRequests");
                 });
 
             modelBuilder.Entity("AbroApi.Data.Trip", b =>
@@ -374,7 +374,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("OrganiserId");
 
-                    b.ToTable("Trips", (string)null);
+                    b.ToTable("Trips");
                 });
 
             modelBuilder.Entity("AbroApi.Data.TripCostItem", b =>
@@ -397,7 +397,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("TripId");
 
-                    b.ToTable("TripCostItem", (string)null);
+                    b.ToTable("TripCostItem");
                 });
 
             modelBuilder.Entity("AbroApi.Data.TripImage", b =>
@@ -418,7 +418,7 @@ namespace AbroApi.Migrations
 
                     b.HasKey("TripId");
 
-                    b.ToTable("TripImages", (string)null);
+                    b.ToTable("TripImages");
                 });
 
             modelBuilder.Entity("AbroApi.Data.TripRequest", b =>
@@ -449,7 +449,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("TripId", "UserId");
 
-                    b.ToTable("TripRequests", (string)null);
+                    b.ToTable("TripRequests");
                 });
 
             modelBuilder.Entity("AbroApi.Data.User", b =>
@@ -477,9 +477,15 @@ namespace AbroApi.Migrations
                         .IsRequired()
                         .HasColumnType("text[]");
 
+                    b.Property<Point>("LastLocation")
+                        .HasColumnType("geography (point)");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("LocationUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Phone")
                         .IsRequired()
@@ -494,10 +500,14 @@ namespace AbroApi.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("LastLocation");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("LastLocation"), "gist");
+
                     b.HasIndex("Phone")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("AbroApi.Data.UserNotification", b =>
@@ -535,7 +545,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("UserId", "CreatedAt");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("AbroApi.Data.IdVerification", b =>
@@ -580,7 +590,7 @@ namespace AbroApi.Migrations
 
             modelBuilder.Entity("AbroApi.Data.SeatRequest", b =>
                 {
-                    b.HasOne("AbroApi.Data.Ride", null)
+                    b.HasOne("AbroApi.Data.Ride", "Ride")
                         .WithMany("Requests")
                         .HasForeignKey("RideId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -591,6 +601,8 @@ namespace AbroApi.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Ride");
 
                     b.Navigation("User");
                 });
@@ -626,7 +638,7 @@ namespace AbroApi.Migrations
 
             modelBuilder.Entity("AbroApi.Data.TripRequest", b =>
                 {
-                    b.HasOne("AbroApi.Data.Trip", null)
+                    b.HasOne("AbroApi.Data.Trip", "Trip")
                         .WithMany("Requests")
                         .HasForeignKey("TripId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -637,6 +649,8 @@ namespace AbroApi.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Trip");
 
                     b.Navigation("User");
                 });

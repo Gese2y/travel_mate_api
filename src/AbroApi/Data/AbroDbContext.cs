@@ -69,6 +69,12 @@ public class AbroDbContext(DbContextOptions<AbroDbContext> options) : DbContext(
             e.HasOne<Trip>().WithOne().HasForeignKey<TripImage>(i => i.TripId).OnDelete(DeleteBehavior.Cascade);
         });
 
+        b.Entity<User>(e =>
+        {
+            e.Property(u => u.LastLocation).HasColumnType("geography (point)");
+            e.HasIndex(u => u.LastLocation).HasMethod("gist");
+        });
+
         b.Entity<IdVerification>(e =>
         {
             e.HasOne(v => v.User).WithMany().HasForeignKey(v => v.UserId).OnDelete(DeleteBehavior.Cascade);
