@@ -92,7 +92,7 @@ public static class VerificationEndpoints
         }).DisableAntiforgery();
     }
 
-    // ---- the admin web page -------------------------------------------------
+    // ---- admin review (used by the admin site) ------------------------------
 
     private static bool IsAdmin(HttpContext http, IConfiguration cfg)
     {
@@ -106,12 +106,8 @@ public static class VerificationEndpoints
 
     private static void MapAdmin(IEndpointRouteBuilder app)
     {
-        // The page itself holds no data; every call it makes needs the key.
-        app.MapGet("/admin", (IConfiguration cfg) =>
-            string.IsNullOrWhiteSpace(cfg["Admin:Key"])
-                ? Results.NotFound()
-                : Results.Content(AdminPage.Html, "text/html; charset=utf-8")).AllowAnonymous();
-
+        // Called by the separate admin site (travel_mate_admin), which keeps the
+        // key on its server. Every route needs the X-Admin-Key header.
         var g = app.MapGroup("/admin/api/verifications").AllowAnonymous().ExcludeFromDescription();
 
         g.MapGet("/", async (
