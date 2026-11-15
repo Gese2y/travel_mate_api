@@ -82,6 +82,7 @@ app.UseAuthorization();
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapAuth();
 app.MapMe();
+app.MapMyTrips();
 app.MapRides();
 app.MapNotifications();
 app.MapTrips();

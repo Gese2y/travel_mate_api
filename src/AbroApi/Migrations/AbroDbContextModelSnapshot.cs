@@ -52,7 +52,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Devices");
+                    b.ToTable("Devices", (string)null);
                 });
 
             modelBuilder.Entity("AbroApi.Data.IdVerification", b =>
@@ -114,7 +114,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("Status", "SubmittedAt");
 
-                    b.ToTable("IdVerifications");
+                    b.ToTable("IdVerifications", (string)null);
                 });
 
             modelBuilder.Entity("AbroApi.Data.OtpCode", b =>
@@ -147,7 +147,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("Phone", "CreatedAt");
 
-                    b.ToTable("OtpCodes");
+                    b.ToTable("OtpCodes", (string)null);
                 });
 
             modelBuilder.Entity("AbroApi.Data.RefreshToken", b =>
@@ -177,7 +177,7 @@ namespace AbroApi.Migrations
                     b.HasIndex("TokenHash")
                         .IsUnique();
 
-                    b.ToTable("RefreshTokens");
+                    b.ToTable("RefreshTokens", (string)null);
                 });
 
             modelBuilder.Entity("AbroApi.Data.Ride", b =>
@@ -212,7 +212,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("DriverId");
 
-                    b.ToTable("Rides");
+                    b.ToTable("Rides", (string)null);
                 });
 
             modelBuilder.Entity("AbroApi.Data.RideCostItem", b =>
@@ -235,7 +235,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("RideId");
 
-                    b.ToTable("RideCostItems");
+                    b.ToTable("RideCostItems", (string)null);
                 });
 
             modelBuilder.Entity("AbroApi.Data.RideStop", b =>
@@ -273,7 +273,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("RideId");
 
-                    b.ToTable("RideStops");
+                    b.ToTable("RideStops", (string)null);
                 });
 
             modelBuilder.Entity("AbroApi.Data.SeatRequest", b =>
@@ -310,7 +310,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("RideId", "UserId");
 
-                    b.ToTable("SeatRequests");
+                    b.ToTable("SeatRequests", (string)null);
                 });
 
             modelBuilder.Entity("AbroApi.Data.Trip", b =>
@@ -374,7 +374,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("OrganiserId");
 
-                    b.ToTable("Trips");
+                    b.ToTable("Trips", (string)null);
                 });
 
             modelBuilder.Entity("AbroApi.Data.TripCostItem", b =>
@@ -397,7 +397,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("TripId");
 
-                    b.ToTable("TripCostItem");
+                    b.ToTable("TripCostItem", (string)null);
                 });
 
             modelBuilder.Entity("AbroApi.Data.TripImage", b =>
@@ -418,7 +418,7 @@ namespace AbroApi.Migrations
 
                     b.HasKey("TripId");
 
-                    b.ToTable("TripImages");
+                    b.ToTable("TripImages", (string)null);
                 });
 
             modelBuilder.Entity("AbroApi.Data.TripRequest", b =>
@@ -449,7 +449,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("TripId", "UserId");
 
-                    b.ToTable("TripRequests");
+                    b.ToTable("TripRequests", (string)null);
                 });
 
             modelBuilder.Entity("AbroApi.Data.User", b =>
@@ -497,7 +497,7 @@ namespace AbroApi.Migrations
                     b.HasIndex("Phone")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("AbroApi.Data.UserNotification", b =>
@@ -535,7 +535,7 @@ namespace AbroApi.Migrations
 
                     b.HasIndex("UserId", "CreatedAt");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("AbroApi.Data.IdVerification", b =>

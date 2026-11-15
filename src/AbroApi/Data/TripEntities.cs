@@ -50,6 +50,7 @@ public class TripRequest
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid TripId { get; set; }
+    public Trip Trip { get; set; } = null!;
     public Guid UserId { get; set; }
     public User User { get; set; } = null!;
     public string? Note { get; set; }

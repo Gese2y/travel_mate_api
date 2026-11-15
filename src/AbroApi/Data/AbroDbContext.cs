@@ -36,7 +36,7 @@ public class AbroDbContext(DbContextOptions<AbroDbContext> options) : DbContext(
             e.HasOne(r => r.Driver).WithMany().HasForeignKey(r => r.DriverId);
             e.HasMany(r => r.Stops).WithOne().HasForeignKey(s => s.RideId).OnDelete(DeleteBehavior.Cascade);
             e.HasMany(r => r.CostItems).WithOne().HasForeignKey(c => c.RideId).OnDelete(DeleteBehavior.Cascade);
-            e.HasMany(r => r.Requests).WithOne().HasForeignKey(q => q.RideId).OnDelete(DeleteBehavior.Cascade);
+            e.HasMany(r => r.Requests).WithOne(q => q.Ride).HasForeignKey(q => q.RideId).OnDelete(DeleteBehavior.Cascade);
             e.Ignore(r => r.TotalCost).Ignore(r => r.PricePerSeat)
              .Ignore(r => r.SeatsTaken).Ignore(r => r.SeatsFree);
         });
@@ -59,7 +59,7 @@ public class AbroDbContext(DbContextOptions<AbroDbContext> options) : DbContext(
             e.HasIndex(t => t.LeavesAt);
             e.HasOne(t => t.Organiser).WithMany().HasForeignKey(t => t.OrganiserId);
             e.HasMany(t => t.CostItems).WithOne().HasForeignKey(c => c.TripId).OnDelete(DeleteBehavior.Cascade);
-            e.HasMany(t => t.Requests).WithOne().HasForeignKey(r => r.TripId).OnDelete(DeleteBehavior.Cascade);
+            e.HasMany(t => t.Requests).WithOne(r => r.Trip).HasForeignKey(r => r.TripId).OnDelete(DeleteBehavior.Cascade);
             e.Ignore(t => t.GoingCount).Ignore(t => t.SpotsLeft);
         });
         b.Entity<TripRequest>(e => e.HasIndex(r => new { r.TripId, r.UserId }));
